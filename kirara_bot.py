@@ -99,9 +99,14 @@ HASHTAGS = {
 def generate_post(theme: str, time_of_day: str = "朝") -> str:
     """OpenAI APIを使って投稿文を生成する"""
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    # 環境変数の読み込み（GitHub Actions対応: .envがなくても動作する）
+    api_key = os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    print(f"[DEBUG] OPENAI_API_KEY取得: {'設定済み（' + api_key[:7] + '...）' if api_key else '未設定'}")
     if not api_key:
-        raise ValueError("OPENAI_API_KEYが設定されていません。.envファイルを確認してください。")
+        # 全環境変数を出力してデバッグ
+        env_keys = [k for k in os.environ.keys() if 'OPENAI' in k or 'API' in k]
+        print(f"[DEBUG] API関連の環境変数一覧: {env_keys}")
+        raise ValueError("OPENAI_API_KEYが設定されていません。GitHub SecretsまたはローカルのAPIキーを確認してください。")
 
     client = OpenAI(api_key=api_key)
 
