@@ -1,0 +1,13 @@
+# APIキー（絶対にGitHubにアップしない）
+.env
+
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+*.pyo
+
+# 生成されたCSVファイル
+posts_*.csv
+
+# macOS
+.DS_Store

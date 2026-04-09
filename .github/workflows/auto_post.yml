@@ -1,0 +1,56 @@
+name: Kirara 開運Bot 自動投稿
+
+on:
+  schedule:
+    # 毎日 9:00 JST（= UTC 00:00）に朝の投稿
+    - cron: '0 0 * * *'
+    # 毎日 21:00 JST（= UTC 12:00）に夜の投稿
+    - cron: '0 12 * * *'
+  # 手動実行も可能にする（GitHubのActionsタブから「Run workflow」ボタンで実行）
+  workflow_dispatch:
+    inputs:
+      time_of_day:
+        description: '投稿タイミング（morning または evening）'
+        required: true
+        default: 'morning'
+        type: choice
+        options:
+          - morning
+          - evening
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: |
+          pip install openai tweepy python-dotenv schedule
+
+      - name: 朝の投稿（9:00 JST）
+        if: github.event.schedule == '0 0 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'morning')
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python kirara_bot.py --post morning
+
+      - name: 夜の投稿（21:00 JST）
+        if: github.event.schedule == '0 12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'evening')
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python kirara_bot.py --post evening
