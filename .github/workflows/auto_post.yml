@@ -2,9 +2,7 @@ name: Kirara 開運Bot 自動投稿
 
 on:
   schedule:
-    # 毎日 9:00 JST（= UTC 00:00）に朝の投稿
     - cron: '0 0 * * *'
-    # 毎日 21:00 JST（= UTC 12:00）に夜の投稿
     - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
@@ -39,24 +37,18 @@ jobs:
       - name: 依存パッケージをインストール
         run: pip install openai tweepy python-dotenv schedule
 
-      - name: Secretsの確認（デバッグ用）
+      - name: Secretsの確認
         run: |
           if [ -z "$OPENAI_API_KEY" ]; then
             echo "ERROR: OPENAI_API_KEY が空です"
           else
-            echo "OK: OPENAI_API_KEY が設定されています（先頭7文字: ${OPENAI_API_KEY:0:7}...）"
+            echo "OK: OPENAI_API_KEY 設定済み"
           fi
 
       - name: 朝の投稿（9:00 JST）
-        if: >
-          github.event.schedule == '0 0 * * *' ||
-          (github.event_name == 'workflow_dispatch' &&
-           github.event.inputs.time_of_day == 'morning')
+        if: github.event.schedule == '0 0 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'morning')
         run: python kirara_bot.py --post morning
 
       - name: 夜の投稿（21:00 JST）
-        if: >
-          github.event.schedule == '0 12 * * *' ||
-          (github.event_name == 'workflow_dispatch' &&
-           github.event.inputs.time_of_day == 'evening')
+        if: github.event.schedule == '0 12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'evening')
         run: python kirara_bot.py --post evening
