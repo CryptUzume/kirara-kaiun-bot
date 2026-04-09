@@ -6,7 +6,6 @@ on:
     - cron: '0 0 * * *'
     # 毎日 21:00 JST（= UTC 12:00）に夜の投稿
     - cron: '0 12 * * *'
-  # 手動実行も可能にする（GitHubのActionsタブから「Run workflow」ボタンで実行）
   workflow_dispatch:
     inputs:
       time_of_day:
@@ -18,12 +17,15 @@ on:
           - morning
           - evening
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   post:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
 
     steps:
       - name: リポジトリをチェックアウト
@@ -44,26 +46,12 @@ jobs:
           else
             echo "OK: OPENAI_API_KEY が設定されています（先頭7文字: ${OPENAI_API_KEY:0:7}...）"
           fi
-          if [ -z "$X_API_KEY" ]; then
-            echo "ERROR: X_API_KEY が空です"
-          else
-            echo "OK: X_API_KEY が設定されています"
-          fi
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
 
       - name: 朝の投稿（9:00 JST）
         if: >
           github.event.schedule == '0 0 * * *' ||
           (github.event_name == 'workflow_dispatch' &&
            github.event.inputs.time_of_day == 'morning')
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
         run: python kirara_bot.py --post morning
 
       - name: 夜の投稿（21:00 JST）
@@ -71,10 +59,4 @@ jobs:
           github.event.schedule == '0 12 * * *' ||
           (github.event_name == 'workflow_dispatch' &&
            github.event.inputs.time_of_day == 'evening')
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
         run: python kirara_bot.py --post evening
