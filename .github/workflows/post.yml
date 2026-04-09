@@ -30,11 +30,13 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install openai tweepy python-dotenv
-            - name: check
+      - name: check
         run: echo "KEY=${OPENAI_API_KEY:0:7}"
       - name: morning
         if: github.event.schedule == '0 0 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'morning')
         run: python kirara_bot.py --post morning
       - name: evening
         if: github.event.schedule == '0 12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'evening')
+        run: python kirara_bot.py --post evening
+12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.time_of_day == 'evening')
         run: python kirara_bot.py --post evening
